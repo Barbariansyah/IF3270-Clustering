@@ -47,6 +47,7 @@ class Agglomerative:
                 dist_matrix[i, j] = dist
                 dist_matrix[j, i] = dist
 
+        print(dist_matrix)
         return dist_matrix
 
     def _merge_cluster(self, min_dist_idx):
@@ -102,27 +103,70 @@ class Agglomerative:
         return min_dist
 
     def _complete_linkage(self, c1, c2):
-        pass
+        """Return the complete linkage distance between two cluster, uses eucledian distance"""
+        max_dist = -np.inf
+        for i in range(self.dataset_size):
+            for j in range(i + 1, self.dataset_size):
+                label_i = self.labels[i]
+                label_j = self.labels[j]
+
+                if ((label_i == c1 and label_j == c2) or (label_i == c2 and label_j == c1)):
+                    dist = eucledian(self.dataset[i], self.dataset[j])
+                    if (dist > max_dist):
+                        max_dist = dist
+
+        return max_dist
 
     def _average_linkage(self, c1, c2):
-        pass
+        """Return the average linkage distance between two cluster, uses eucledian distance"""
+        avg_dist = 0
+        count = 0
+        total_dist = 0
+        for i in range(self.dataset_size):
+            for j in range(i + 1, self.dataset_size):
+                label_i = self.labels[i]
+                label_j = self.labels[j]
+                
+                if ((label_i == c1 and label_j == c2) or (label_i == c2 and label_j == c1)):
+                    dist = eucledian(self.dataset[i], self.dataset[j])
+                    total_dist += dist
+                    count += 1
+
+        avg_dist = float(total_dist) / float(count)
+
+        return avg_dist
 
     def _average_group_linkage(self, c1, c2):
-        pass
+        """Return the average group linkage distance between two cluster, uses eucledian distance"""
+        avg_group_dist = 0
+        count_c1 = 0
+        count_c2 = 0
+        total_dist_c1 = 0
+        total_dist_c2 = 0
+        for i in range(self.dataset_size):
+            for j in range(i + 1, self.dataset_size):
+                label_i = self.labels[i]
+                label_j = self.labels[j]
+                
+                if ((label_i == c1) or (label_j == c1)):
+                    total_dist_c1 += self.dataset[i] if (label_i == c1) else self.dataset[j]
+                    count_c1 += 1
+
+                if ((label_i == c2) or (label_j == c2)):
+                    total_dist_c2 += self.dataset[i] if (label_i == c2) else self.dataset[j]
+                    count_c2 += 1
+
+        avg_dist = eucledian(total_dist_c1/count_c1, total_dist_c2/count_c2)
+
+        return avg_dist
 
 
 if __name__ == "__main__":
     X = np.array([[9, 10],
                   [10, 10],
                   [1, 1],
-                  [0, 1],
-                  [1, 0],
-                  [10, 11],
-                  [11, 10],
-                  [11, 11],
-                  [10, 9],
-                  [9, 10], ])
+                  [0, 1]])
 
-    aggl = Agglomerative('single', 2)
+    aggl = Agglomerative('avg', 2)
     aggl.fit(X)
     print(aggl.labels)

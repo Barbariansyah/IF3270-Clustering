@@ -34,7 +34,7 @@ class KMeans:
         old_labels = self.labels.copy()
         label = 0
         for label_idx, point in enumerate(data):
-            distance = 9999999
+            distance = np.inf
             for idx, center in enumerate(self.clusters_center):
                 new_distance = self.eucledian(center,point)
                 if(new_distance<distance):
