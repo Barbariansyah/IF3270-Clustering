@@ -16,7 +16,7 @@ class Agglomerative:
         self.linkage_fun = linkage_funs[linkage]
         self.n_clusters = n_clusters
 
-    def fit(self, X):
+    def fit(self, X, verbose=False):
         self.dataset = X.copy()
         self.dataset_size = X.shape[0]
         self.instance_dimension = X.shape[1]
@@ -26,6 +26,10 @@ class Agglomerative:
             self.labels[i] = i
         self.cluster_count = self.dataset_size
 
+        self.labels_to_data_map = dict()
+        for idx, label in enumerate(self.labels):
+            self.labels_to_data_map[label] = [idx]
+
         while self.cluster_count > self.n_clusters:
             dist_matrix = self._calc_dist_matrix()
             min_dist_idx = np.unravel_index(
@@ -33,11 +37,15 @@ class Agglomerative:
 
             self._merge_cluster(min_dist_idx)
             self._normalize_cluster()
+            self._update_labels_map()
 
             self.cluster_count = np.unique(self.labels).size
-            print(f"Cluster count = {self.cluster_count}... ", end="", flush=True)
-        
-            print("finished!", end="\r", flush=True)
+            if (verbose):
+                print(
+                    f"\rCluster count = {self.cluster_count}".ljust(40, " "), end="", flush=True)
+
+        if (verbose):
+            print("\rFinished!".ljust(40, " "), flush=True)
 
     def _calc_dist_matrix(self):
         dist_matrix = np.zeros(
@@ -89,18 +97,27 @@ class Agglomerative:
                     else:
                         break
 
+    def _update_labels_map(self):
+        """
+        Assign each data to its label on labels_to_data_map
+        """
+        self.labels_to_data_map = dict()
+        for idx, label in enumerate(self.labels):
+            if label in self.labels_to_data_map:
+                self.labels_to_data_map[label].append(idx)
+            else:
+                self.labels_to_data_map[label] = [idx]
+
     def _single_linkage(self, c1, c2):
         """Return the single linkage distance between two cluster, uses eucledian distance"""
         min_dist = np.inf
-        for i in range(self.dataset_size):
-            for j in range(i + 1, self.dataset_size):
-                label_i = self.labels[i]
-                label_j = self.labels[j]
-
-                if ((label_i == c1 and label_j == c2) or (label_i == c2 and label_j == c1)):
-                    dist = eucledian(self.dataset[i], self.dataset[j])
-                    if (dist < min_dist):
-                        min_dist = dist
+        idx_c1 = self.labels_to_data_map[c1]
+        idx_c2 = self.labels_to_data_map[c2]
+        for i in idx_c1:
+            for j in idx_c2:
+                dist = eucledian(self.dataset[i], self.dataset[j])
+                if (dist < min_dist):
+                    min_dist = dist
 
         return min_dist
 
@@ -128,7 +145,7 @@ class Agglomerative:
             for j in range(i + 1, self.dataset_size):
                 label_i = self.labels[i]
                 label_j = self.labels[j]
-                
+
                 if ((label_i == c1 and label_j == c2) or (label_i == c2 and label_j == c1)):
                     dist = eucledian(self.dataset[i], self.dataset[j])
                     total_dist += dist
@@ -149,13 +166,15 @@ class Agglomerative:
             for j in range(i + 1, self.dataset_size):
                 label_i = self.labels[i]
                 label_j = self.labels[j]
-                
+
                 if ((label_i == c1) or (label_j == c1)):
-                    total_dist_c1 += self.dataset[i] if (label_i == c1) else self.dataset[j]
+                    total_dist_c1 += self.dataset[i] if (
+                        label_i == c1) else self.dataset[j]
                     count_c1 += 1
 
                 if ((label_i == c2) or (label_j == c2)):
-                    total_dist_c2 += self.dataset[i] if (label_i == c2) else self.dataset[j]
+                    total_dist_c2 += self.dataset[i] if (
+                        label_i == c2) else self.dataset[j]
                     count_c2 += 1
 
         avg_dist = eucledian(total_dist_c1/count_c1, total_dist_c2/count_c2)
