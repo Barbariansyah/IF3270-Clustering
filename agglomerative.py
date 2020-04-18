@@ -47,7 +47,6 @@ class Agglomerative:
                 dist_matrix[i, j] = dist
                 dist_matrix[j, i] = dist
 
-        print(dist_matrix)
         return dist_matrix
 
     def _merge_cluster(self, min_dist_idx):
