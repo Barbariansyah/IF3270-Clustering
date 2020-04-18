@@ -35,6 +35,9 @@ class Agglomerative:
             self._normalize_cluster()
 
             self.cluster_count = np.unique(self.labels).size
+            print(f"Cluster count = {self.cluster_count}... ", end="", flush=True)
+        
+            print("finished!", end="\r", flush=True)
 
     def _calc_dist_matrix(self):
         dist_matrix = np.zeros(
@@ -168,4 +171,5 @@ if __name__ == "__main__":
 
     aggl = Agglomerative('avg', 2)
     aggl.fit(X)
+    print("\n")
     print(aggl.labels)
