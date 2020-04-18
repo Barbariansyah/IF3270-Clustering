@@ -124,62 +124,55 @@ class Agglomerative:
     def _complete_linkage(self, c1, c2):
         """Return the complete linkage distance between two cluster, uses eucledian distance"""
         max_dist = -np.inf
-        for i in range(self.dataset_size):
-            for j in range(i + 1, self.dataset_size):
-                label_i = self.labels[i]
-                label_j = self.labels[j]
-
-                if ((label_i == c1 and label_j == c2) or (label_i == c2 and label_j == c1)):
-                    dist = eucledian(self.dataset[i], self.dataset[j])
-                    if (dist > max_dist):
-                        max_dist = dist
+        idx_c1 = self.labels_to_data_map[c1]
+        idx_c2 = self.labels_to_data_map[c2]
+        for i in idx_c1:
+            for j in idx_c2:
+                dist = eucledian(self.dataset[i], self.dataset[j])
+                if (dist > max_dist):
+                    max_dist = dist
 
         return max_dist
 
     def _average_linkage(self, c1, c2):
         """Return the average linkage distance between two cluster, uses eucledian distance"""
-        avg_dist = 0
         count = 0
+        avg_dist = 0
         total_dist = 0
-        for i in range(self.dataset_size):
-            for j in range(i + 1, self.dataset_size):
-                label_i = self.labels[i]
-                label_j = self.labels[j]
 
-                if ((label_i == c1 and label_j == c2) or (label_i == c2 and label_j == c1)):
-                    dist = eucledian(self.dataset[i], self.dataset[j])
-                    total_dist += dist
-                    count += 1
-
+        idx_c1 = self.labels_to_data_map[c1]
+        idx_c2 = self.labels_to_data_map[c2]
+        for i in idx_c1:
+            for j in idx_c2:
+                dist = eucledian(self.dataset[i], self.dataset[j])
+                total_dist += dist
+                count += 1
+        
         avg_dist = float(total_dist) / float(count)
 
         return avg_dist
 
     def _average_group_linkage(self, c1, c2):
         """Return the average group linkage distance between two cluster, uses eucledian distance"""
-        avg_group_dist = 0
         count_c1 = 0
         count_c2 = 0
         total_dist_c1 = 0
-        total_dist_c2 = 0
-        for i in range(self.dataset_size):
-            for j in range(i + 1, self.dataset_size):
-                label_i = self.labels[i]
-                label_j = self.labels[j]
+        total_dist_c2 = 0    
+        avg_group_dist = 0
 
-                if ((label_i == c1) or (label_j == c1)):
-                    total_dist_c1 += self.dataset[i] if (
-                        label_i == c1) else self.dataset[j]
-                    count_c1 += 1
+        idx_c1 = self.labels_to_data_map[c1]
+        idx_c2 = self.labels_to_data_map[c2]
+        for i in idx_c1:
+            total_dist_c1 += self.dataset[i]
+            count_c1 += 1
+        
+        for j in idx_c2:
+            total_dist_c2 += self.dataset[j]
+            count_c2 += 1
 
-                if ((label_i == c2) or (label_j == c2)):
-                    total_dist_c2 += self.dataset[i] if (
-                        label_i == c2) else self.dataset[j]
-                    count_c2 += 1
+        avg_group_dist = eucledian(total_dist_c1/count_c1, total_dist_c2/count_c2)
 
-        avg_dist = eucledian(total_dist_c1/count_c1, total_dist_c2/count_c2)
-
-        return avg_dist
+        return avg_group_dist
 
 
 if __name__ == "__main__":
@@ -188,7 +181,7 @@ if __name__ == "__main__":
                   [1, 1],
                   [0, 1]])
 
-    aggl = Agglomerative('avg', 2)
+    aggl = Agglomerative('avg_group', 2)
     aggl.fit(X)
     print("\n")
     print(aggl.labels)
